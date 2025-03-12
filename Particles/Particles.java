@@ -6,6 +6,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
+enum MouseState {
+	None,
+	Left,
+	Right
+}
+
 public class Particles extends JFrame implements KeyListener {
 	private static final int MAX_PARTICLES = 1000000;
 	private static final int SPAWN_COUNT = 100;
@@ -16,7 +22,7 @@ public class Particles extends JFrame implements KeyListener {
 	private int count = 0;
 	private JPanel panel;
 	private BufferedImage buffer;
-	private int mouseState = 0; // 0: none, 1: left, 2: right
+	private MouseState mouseState = MouseState.None;
 	private Vector2 mousePosition = new Vector2(0.0f, 0.0f);
 
 	public Particles() {
@@ -68,16 +74,16 @@ public class Particles extends JFrame implements KeyListener {
             public void mousePressed(MouseEvent e) {
 					mousePosition = new Vector2(e.getX(), e.getY());
                if (SwingUtilities.isLeftMouseButton(e)) {
-                  mouseState = 1;
+                  mouseState = MouseState.Left;
                } else if (SwingUtilities.isRightMouseButton(e)) {
-                  mouseState = 2;
+                  mouseState = MouseState.Right;
                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
 					mousePosition = new Vector2(e.getX(), e.getY());
-               mouseState = 0;
+               mouseState = MouseState.None;
             }
          }
 		);
@@ -100,9 +106,9 @@ public class Particles extends JFrame implements KeyListener {
 			new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					if (mouseState == 1) {
+					if (mouseState == MouseState.Left) {
 						addParticle(mousePosition, true);
-					} else if (mouseState == 2) {
+					} else if (mouseState == MouseState.Right) {
 						for (int i = 0; i < count; i++) {
 							Particle p = particles[i];
 							Vector2 position = p.getPosition();
