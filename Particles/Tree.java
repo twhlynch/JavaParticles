@@ -1,6 +1,7 @@
 package Particles;
 
 import java.util.ArrayList;
+import java.awt.*;
 
 public class Tree {
 	private static final int MAX_LEAFS = 4;
@@ -73,5 +74,16 @@ public class Tree {
 		}
 
 		return results;
+	}
+
+	public void draw(Graphics2D g2d) {
+		g2d.drawRect((int)this.bounds.x, (int)this.bounds.y, (int)this.bounds.w, (int)this.bounds.h);
+
+      if (this.divided) {
+         this.NE.draw(g2d);
+         this.NW.draw(g2d);
+         this.SE.draw(g2d);
+         this.SW.draw(g2d);
+      }
 	}
 }

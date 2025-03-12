@@ -18,6 +18,7 @@ public class Particles extends JFrame implements KeyListener {
 	private static final Bounds defaultBounds = new Bounds(0.0f, 0.0f, 800.0f, 800.0f);
 	private static final boolean DO_COLLISION = true;
 	private static final Vector2 GRAVITY = new Vector2(0.0f, 0.02f);
+	private boolean debug = false;
 	private Particle[] particles = new Particle[MAX_PARTICLES];
 	private int count = 0;
 	private JPanel panel;
@@ -47,16 +48,26 @@ public class Particles extends JFrame implements KeyListener {
 				g2d.setColor(Color.BLACK);
 				g2d.fillRect((int)defaultBounds.x, (int)defaultBounds.y, (int)defaultBounds.w, (int)defaultBounds.h);
 
-				g2d.setColor(Color.WHITE);
+				// draw particles
 				for (int i = 0; i < count; i++) {
 					Particle p = particles[i];
 					Vector2 position = p.getPosition();
-					if (p.hit) {
-						g2d.setColor(Color.RED);
-					}
-               g2d.drawLine((int)position.x, (int)position.y, (int)position.x, (int)position.y);
 					g2d.setColor(Color.WHITE);
+					if (p.hit) g2d.setColor(Color.RED);
+               g2d.drawLine((int)position.x, (int)position.y, (int)position.x, (int)position.y);
 				}
+				g2d.setColor(Color.WHITE);
+
+				// draw tree
+				if (debug) {
+					Tree tree = new Tree(defaultBounds);
+					for (int i = 0; i < count; i++) {
+						Particle p = particles[i];
+						tree.insert(p);
+					}
+					tree.draw(g2d);
+				}
+
 				g2d.drawString("Particles: " + count, 10, 20);
 				
 				g2d.dispose();
@@ -143,6 +154,8 @@ public class Particles extends JFrame implements KeyListener {
 			particles = new Particle[MAX_PARTICLES];
 		} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 			System.exit(0);
+		} else if (e.getKeyCode() == KeyEvent.VK_D) {
+			debug = !debug;
 		}
 	}
 
