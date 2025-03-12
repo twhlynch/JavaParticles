@@ -24,7 +24,7 @@ public class Particles extends JFrame implements KeyListener {
 	private JPanel panel;
 	private BufferedImage buffer;
 	private MouseState mouseState = MouseState.None;
-	private Vector2 mousePosition;
+	private Vector2 mousePosition = new Vector2();
 
 	public Particles() {
 		setTitle("Particle Simulation");
