@@ -24,7 +24,7 @@ public class Particles extends JFrame implements KeyListener {
 	private JPanel panel;
 	private BufferedImage buffer;
 	private MouseState mouseState = MouseState.None;
-	private Vector2 mousePosition = new Vector2(0.0f, 0.0f);
+	private Vector2 mousePosition;
 
 	public Particles() {
 		setTitle("Particle Simulation");
@@ -83,7 +83,7 @@ public class Particles extends JFrame implements KeyListener {
 			new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-					mousePosition = new Vector2(e.getX(), e.getY());
+					mousePosition.set(e.getX(), e.getY());
                if (SwingUtilities.isLeftMouseButton(e)) {
                   mouseState = MouseState.Left;
                } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -93,7 +93,7 @@ public class Particles extends JFrame implements KeyListener {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-					mousePosition = new Vector2(e.getX(), e.getY());
+					mousePosition.set(e.getX(), e.getY());
                mouseState = MouseState.None;
             }
          }
@@ -103,10 +103,10 @@ public class Particles extends JFrame implements KeyListener {
 			new MouseAdapter() {
 				@Override
 				public void mouseMoved(MouseEvent e) {
-					mousePosition = new Vector2(e.getX(), e.getY());
+					mousePosition.set(e.getX(), e.getY());
             }
 				public void mouseDragged(MouseEvent e) {
-					mousePosition = new Vector2(e.getX(), e.getY());
+					mousePosition.set(e.getX(), e.getY());
             }
 			}
 		);
@@ -198,8 +198,8 @@ public class Particles extends JFrame implements KeyListener {
 					float fx = (float)Math.cos(angle) * force;
 					float fy = (float)Math.sin(angle) * force;
 
-					p.addVelocity(new Vector2(fx, fy));
-					other.addVelocity(new Vector2(-fx, -fy));
+					p.addVelocity(fx, fy);
+					other.addVelocity(-fx, -fy);
 
 					p.hit = true;
 					other.hit = true;

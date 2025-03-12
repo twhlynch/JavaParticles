@@ -11,15 +11,12 @@ public class Particle {
 	}
 
 	public void update() {
-		position.x += velocity.x;
-      position.y += velocity.y;
-		velocity.x *= 0.995f;
-		velocity.y *= 0.995f;
+		position.add(velocity);
+		velocity.multiply(0.995f);
    }
 
 	public void updateGravity(Vector2 G) {
-		velocity.x += G.x;
-		velocity.y += G.y;
+		velocity.add(G);
 	}
 
 	public void boundsCheck(Bounds bounds) {
@@ -45,7 +42,10 @@ public class Particle {
    }
 
 	public void addVelocity(Vector2 velocity) {
-		this.velocity.x += velocity.x;
-      this.velocity.y += velocity.y;
+		this.velocity.add(velocity);
+	}
+	public void addVelocity(float x, float y) {
+		this.velocity.x += x;
+		this.velocity.y += y;
 	}
 }
