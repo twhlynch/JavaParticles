@@ -9,11 +9,7 @@ public class Tree {
 	private Particle[] particles = new Particle[MAX_LEAFS];
 	private int count;
 	private boolean divided;
-
-	private Tree NE;
-	private Tree NW;
-	private Tree SE;
-	private Tree SW;
+	private Tree NE, NW, SE, SW;
 
 	public Tree(Bounds bounds) {
 		this.bounds = bounds;
