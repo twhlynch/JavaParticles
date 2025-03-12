@@ -188,9 +188,7 @@ public class Particles extends JFrame implements KeyListener {
 
 					float dx = position.x - otherPosition.x;
 					float dy = position.y - otherPosition.y;
-					float distance = (float)Math.sqrt(dx * dx + dy * dy);
-
-					if (distance > 10.0f) continue;
+					float distance = Math.abs(dx - dx) + Math.abs(dy - dy);
 					
 					float force = 0.05f * distance;
 					float angle = (float)Math.atan2(dy, dx);
