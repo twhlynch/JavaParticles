@@ -25,6 +25,7 @@ public class Particles extends JFrame implements KeyListener {
 	private BufferedImage buffer;
 	private MouseState mouseState = MouseState.None;
 	private Vector2 mousePosition = new Vector2();
+	private long lastFrameTime = System.nanoTime();
 
 	public Particles() {
 		setTitle("Particle Simulation");
@@ -69,7 +70,12 @@ public class Particles extends JFrame implements KeyListener {
 				}
 
 				g2d.drawString("Particles: " + count, 10, 20);
-				
+
+				long currentFrameTime = System.nanoTime();
+				float timeSince = (float)(currentFrameTime - lastFrameTime);
+				g2d.drawString(String.format("ms: %.2f", timeSince / 1000000.0f), 10, 40);
+				lastFrameTime = currentFrameTime;
+
 				g2d.dispose();
 				g.drawImage(buffer, 0, 0, this);
 
@@ -113,7 +119,7 @@ public class Particles extends JFrame implements KeyListener {
 
 		add(panel);
 
-		Timer timer = new Timer(1000 / 120,
+		Timer timer = new Timer(0,
 			new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
