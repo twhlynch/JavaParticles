@@ -73,7 +73,7 @@ public class Particles extends JFrame implements KeyListener {
 
 				long currentFrameTime = System.nanoTime();
 				float timeSince = (float)(currentFrameTime - lastFrameTime);
-				g2d.drawString(String.format("ms: %.2f", timeSince / 1000000.0f), 10, 40);
+				g2d.drawString(String.format("fps: %.2f", 1000.0f / (timeSince / 1000000.0f)), 10, 40);
 				lastFrameTime = currentFrameTime;
 
 				g2d.dispose();
