@@ -14,7 +14,7 @@ enum MouseState {
 
 public class Particles extends JFrame implements KeyListener {
 	private static final int MAX_PARTICLES = 1000000;
-	private static final int SPAWN_COUNT = 100;
+	private static final int SPAWN_COUNT = 10;
 	private static final Bounds defaultBounds = new Bounds(0.0f, 0.0f, 800.0f, 800.0f);
 	private static final boolean DO_COLLISION = true;
 	private static final Vector2 GRAVITY = new Vector2(0.0f, 0.02f);
@@ -26,6 +26,7 @@ public class Particles extends JFrame implements KeyListener {
 	private MouseState mouseState = MouseState.None;
 	private Vector2 mousePosition = new Vector2();
 	private long lastFrameTime = System.nanoTime();
+	private float particleScale = 2;
 
 	public Particles() {
 		setTitle("Particle Simulation");
@@ -51,11 +52,7 @@ public class Particles extends JFrame implements KeyListener {
 
 				// draw particles
 				for (int i = 0; i < count; i++) {
-					Particle p = particles[i];
-					Vector2 position = p.getPosition();
-					g2d.setColor(Color.WHITE);
-					if (p.hit) g2d.setColor(Color.RED);
-               g2d.drawLine((int)position.x, (int)position.y, (int)position.x, (int)position.y);
+					particles[i].draw(g2d);
 				}
 				g2d.setColor(Color.WHITE);
 
@@ -129,20 +126,19 @@ public class Particles extends JFrame implements KeyListener {
 						for (int i = 0; i < count; i++) {
 							Particle p = particles[i];
 							Vector2 position = p.getPosition();
+							Vector2 distanceVec = position.getDistance(mousePosition);
 
-							float dx = position.x - mousePosition.x;
-							float dy = position.y - mousePosition.y;
-							float distance = (float)Math.sqrt(dx * dx + dy * dy);
+							float distance = (float)Math.abs(distanceVec.x) + (float)Math.abs(distanceVec.y);
 
 							if (distance > 200.0f) continue;
 
-							float force = Math.min(20.0f / (distance + 0.000001f), 1.0f);
-							float angle = (float)Math.atan2(dy, dx);
+							float force = Math.min(20.0f / (distance + 0.000001f) * p.scale, 1.0f);
+							float angle = (float)Math.atan2(distanceVec.y, distanceVec.x);
 
 							float fx = (float)Math.cos(angle) * force;
 							float fy = (float)Math.sin(angle) * force;
 
-							p.updateGravity(new Vector2(-fx, -fy));
+							p.addVelocity(-fx, -fy);
 						}
 					}
 					updateParticles();
@@ -162,6 +158,10 @@ public class Particles extends JFrame implements KeyListener {
 			System.exit(0);
 		} else if (e.getKeyCode() == KeyEvent.VK_D) {
 			debug = !debug;
+		} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+			particleScale += 1.0f;
+		} else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+			particleScale = (float)Math.max(particleScale - 1.0f, 2.0f);
 		}
 	}
 
@@ -185,33 +185,15 @@ public class Particles extends JFrame implements KeyListener {
 			Vector2 position = p.getPosition();
 
 			if (DO_COLLISION) {
-				ArrayList<Particle> neighbors = tree.query(new Bounds(position.x, position.y, 1.0f, 1.0f));
+				ArrayList<Particle> neighbors = tree.query(new Bounds(position.x - p.scale, position.y - p.scale, p.scale * 2, p.scale * 2));
 
 				for (Particle other : neighbors) {
-					if (other == p) continue;
-
-					Vector2 otherPosition = other.getPosition();
-
-					float dx = position.x - otherPosition.x;
-					float dy = position.y - otherPosition.y;
-					float distance = Math.abs(dx - dx) + Math.abs(dy - dy);
-					
-					float force = 0.05f * distance;
-					float angle = (float)Math.atan2(dy, dx);
-
-					float fx = (float)Math.cos(angle) * force;
-					float fy = (float)Math.sin(angle) * force;
-
-					p.addVelocity(fx, fy);
-					other.addVelocity(-fx, -fy);
-
-					p.hit = true;
-					other.hit = true;
+					p.collide(other);
 				}
 			}
 
 			p.update();
-			p.updateGravity(GRAVITY);
+			p.addVelocity(GRAVITY);
 			p.boundsCheck(defaultBounds);
 		}
 	}
@@ -235,7 +217,7 @@ public class Particles extends JFrame implements KeyListener {
 				velocity.y = y / 30.0f;
 			}
 
-			particles[count++] = new Particle(position, velocity);
+			particles[count++] = new Particle(position, velocity, particleScale);
 		}
 	}
 
