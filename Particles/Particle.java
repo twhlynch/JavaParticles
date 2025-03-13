@@ -17,7 +17,7 @@ public class Particle {
 	public void update() {
 		position.add(velocity);
 		velocity.multiply(0.995f - 0.0001f * scale);
-   }
+	}
 
 	public void boundsCheck(Bounds bounds) {
 		if (position.x < scale / 2 && velocity.x < 0.0f) {
@@ -39,10 +39,10 @@ public class Particle {
 
 	public void draw(Graphics2D g2d) {
 		if (this.scale < 2.0f) {
-			g2d.drawLine((int)position.x, (int)position.y, (int)position.x, (int)position.y);
+			g2d.drawLine((int) position.x, (int) position.y, (int) position.x, (int) position.y);
 		} else {
 			g2d.setColor(this.hit ? Color.RED : Color.WHITE);
-			g2d.fillOval((int)(position.x - scale / 2), (int)(position.y - scale / 2), (int)(scale), (int)(scale));
+			g2d.fillOval((int) (position.x - scale / 2), (int) (position.y - scale / 2), (int) (scale), (int) (scale));
 		}
 	}
 
@@ -51,11 +51,11 @@ public class Particle {
 
 		Vector2 distance = this.position.getDistance(other.getPosition());
 
-		float force = 0.005f * ((float)Math.abs(distance.x) + (float)Math.abs(distance.y));
-		float angle = (float)Math.atan2(distance.y, distance.x);
+		float force = 0.005f * (Math.abs(distance.x) + Math.abs(distance.y));
+		float angle = (float) Math.atan2(distance.y, distance.x);
 
-		float fx = (float)Math.cos(angle) * force;
-		float fy = (float)Math.sin(angle) * force;
+		float fx = (float) Math.cos(angle) * force;
+		float fy = (float) Math.sin(angle) * force;
 
 		this.addVelocity(fx, fy);
 		other.addVelocity(-fx, -fy);
@@ -65,12 +65,13 @@ public class Particle {
 	}
 
 	public Vector2 getPosition() {
-      return position;
-   }
+		return position;
+	}
 
 	public void addVelocity(Vector2 velocity) {
 		this.velocity.add(velocity);
 	}
+
 	public void addVelocity(float x, float y) {
 		this.velocity.x += x;
 		this.velocity.y += y;

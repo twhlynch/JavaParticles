@@ -33,19 +33,19 @@ public class Tree {
 	public boolean insert(Particle p) {
 		if (!this.bounds.contains(p.getPosition())) {
 			return false;
-      }
+		}
 
 		if (count < MAX_LEAFS) {
 			this.particles[this.count++] = p;
 			return true;
 		}
 
-      if (!this.divided) {
-         this.subdivide();
-      }
+		if (!this.divided) {
+			this.subdivide();
+		}
 
-      if (this.NE.insert(p) || this.NW.insert(p) || 
-			this.SE.insert(p) || this.SW.insert(p)) {
+		if (this.NE.insert(p) || this.NW.insert(p) ||
+				this.SE.insert(p) || this.SW.insert(p)) {
 			return true;
 		}
 
@@ -55,35 +55,35 @@ public class Tree {
 	public ArrayList<Particle> query(Bounds bounds) {
 		if (!this.bounds.intersects(bounds)) {
 			return new ArrayList<>();
-      }
+		}
 
 		ArrayList<Particle> results = new ArrayList<>();
 
 		for (int i = 0; i < count; i++) {
 			Particle p = this.particles[i];
-         if (bounds.contains(p.getPosition())) {
-            results.add(p);
-         }
+			if (bounds.contains(p.getPosition())) {
+				results.add(p);
+			}
 		}
 
 		if (this.divided) {
 			results.addAll(this.NE.query(bounds));
-         results.addAll(this.NW.query(bounds));
-         results.addAll(this.SE.query(bounds));
-         results.addAll(this.SW.query(bounds));
+			results.addAll(this.NW.query(bounds));
+			results.addAll(this.SE.query(bounds));
+			results.addAll(this.SW.query(bounds));
 		}
 
 		return results;
 	}
 
 	public void draw(Graphics2D g2d) {
-		g2d.drawRect((int)this.bounds.x, (int)this.bounds.y, (int)this.bounds.w, (int)this.bounds.h);
+		g2d.drawRect((int) this.bounds.x, (int) this.bounds.y, (int) this.bounds.w, (int) this.bounds.h);
 
-      if (this.divided) {
-         this.NE.draw(g2d);
-         this.NW.draw(g2d);
-         this.SE.draw(g2d);
-         this.SW.draw(g2d);
-      }
+		if (this.divided) {
+			this.NE.draw(g2d);
+			this.NW.draw(g2d);
+			this.SE.draw(g2d);
+			this.SW.draw(g2d);
+		}
 	}
 }

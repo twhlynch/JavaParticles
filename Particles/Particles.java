@@ -1,6 +1,10 @@
 package Particles;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -27,10 +31,12 @@ public class Particles extends JFrame implements KeyListener {
 	private Vector2 mousePosition = new Vector2();
 	private long lastFrameTime = System.nanoTime();
 	private float particleScale = 2;
+	private final int NUM_THREADS = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+	private ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 
 	public Particles() {
 		setTitle("Particle Simulation");
-		setSize((int)defaultBounds.w, (int)defaultBounds.h);
+		setSize((int) defaultBounds.w, (int) defaultBounds.h);
 		setUndecorated(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
@@ -38,7 +44,7 @@ public class Particles extends JFrame implements KeyListener {
 		setFocusable(true);
 		setFocusTraversalKeysEnabled(false);
 
-		buffer = new BufferedImage((int)defaultBounds.w, (int)defaultBounds.h, BufferedImage.TYPE_INT_ARGB);
+		buffer = new BufferedImage((int) defaultBounds.w, (int) defaultBounds.h, BufferedImage.TYPE_INT_ARGB);
 
 		panel = new JPanel() {
 			@Override
@@ -48,7 +54,7 @@ public class Particles extends JFrame implements KeyListener {
 				Graphics2D g2d = buffer.createGraphics();
 
 				g2d.setColor(Color.BLACK);
-				g2d.fillRect((int)defaultBounds.x, (int)defaultBounds.y, (int)defaultBounds.w, (int)defaultBounds.h);
+				g2d.fillRect((int) defaultBounds.x, (int) defaultBounds.y, (int) defaultBounds.w, (int) defaultBounds.h);
 
 				// draw particles
 				for (int i = 0; i < count; i++) {
@@ -69,8 +75,7 @@ public class Particles extends JFrame implements KeyListener {
 				g2d.drawString("Particles: " + count, 10, 20);
 
 				long currentFrameTime = System.nanoTime();
-				float timeSince = (float)(currentFrameTime - lastFrameTime);
-				g2d.drawString(String.format("fps: %.2f", 1000.0f / (timeSince / 1000000.0f)), 10, 40);
+				g2d.drawString(String.format("fps: %.2f", 1000.0f / ((float) (currentFrameTime - lastFrameTime) / 1000000.0f)), 10, 40);
 				lastFrameTime = currentFrameTime;
 
 				g2d.dispose();
@@ -84,22 +89,22 @@ public class Particles extends JFrame implements KeyListener {
 
 		panel.addMouseListener(
 			new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
+				@Override
+				public void mousePressed(MouseEvent e) {
 					mousePosition.set(e.getX(), e.getY());
-               if (SwingUtilities.isLeftMouseButton(e)) {
-                  mouseState = MouseState.Left;
-               } else if (SwingUtilities.isRightMouseButton(e)) {
-                  mouseState = MouseState.Right;
-               }
-            }
+					if (SwingUtilities.isLeftMouseButton(e)) {
+						mouseState = MouseState.Left;
+					} else if (SwingUtilities.isRightMouseButton(e)) {
+						mouseState = MouseState.Right;
+					}
+				}
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
+				@Override
+				public void mouseReleased(MouseEvent e) {
 					mousePosition.set(e.getX(), e.getY());
-               mouseState = MouseState.None;
-            }
-         }
+					mouseState = MouseState.None;
+				}
+			}
 		);
 
 		panel.addMouseMotionListener(
@@ -107,10 +112,11 @@ public class Particles extends JFrame implements KeyListener {
 				@Override
 				public void mouseMoved(MouseEvent e) {
 					mousePosition.set(e.getX(), e.getY());
-            }
+				}
+
 				public void mouseDragged(MouseEvent e) {
 					mousePosition.set(e.getX(), e.getY());
-            }
+				}
 			}
 		);
 
@@ -128,15 +134,16 @@ public class Particles extends JFrame implements KeyListener {
 							Vector2 position = p.getPosition();
 							Vector2 distanceVec = position.getDistance(mousePosition);
 
-							float distance = (float)Math.abs(distanceVec.x) + (float)Math.abs(distanceVec.y);
+							float distance = Math.abs(distanceVec.x) + Math.abs(distanceVec.y);
 
-							if (distance > 200.0f) continue;
+							if (distance > 200.0f)
+								continue;
 
 							float force = Math.min(20.0f / (distance + 0.000001f) * p.scale, 1.0f);
-							float angle = (float)Math.atan2(distanceVec.y, distanceVec.x);
+							float angle = (float) Math.atan2(distanceVec.y, distanceVec.x);
 
-							float fx = (float)Math.cos(angle) * force;
-							float fy = (float)Math.sin(angle) * force;
+							float fx = (float) Math.cos(angle) * force;
+							float fy = (float) Math.sin(angle) * force;
 
 							p.addVelocity(-fx, -fy);
 						}
@@ -161,40 +168,84 @@ public class Particles extends JFrame implements KeyListener {
 		} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 			particleScale += 1.0f;
 		} else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-			particleScale = (float)Math.max(particleScale - 1.0f, 2.0f);
+			particleScale = Math.max(particleScale - 1.0f, 2.0f);
 		}
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {}
+	public void keyReleased(KeyEvent e) {
+	}
 
 	@Override
-	public void keyTyped(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {
+	}
 
 	public void updateParticles() {
 		Tree tree = new Tree(defaultBounds);
+
 		if (DO_COLLISION) {
-			for (int i = 0; i < count; i++) {
-				Particle p = particles[i];
-				tree.insert(p);
+			int chunkSize = (count + NUM_THREADS - 1) / NUM_THREADS;
+			List<Runnable> tasks = new ArrayList<>();
+			for (int i = 0; i < NUM_THREADS; i++) {
+				int start = i * chunkSize;
+				int end = Math.min((i + 1) * chunkSize, count);
+				tasks.add(() -> {
+					for (int j = start; j < end; j++) {
+						Particle p = particles[j];
+						tree.insert(p);
+					}
+				});
+			}
+			try {
+				for (Runnable task : tasks) {
+					executor.submit(task);
+				}
+				executor.shutdown();
+				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+				executor = Executors.newFixedThreadPool(NUM_THREADS);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 
-		for (int i = 0; i < count; i++) {
-			Particle p = particles[i];
-			Vector2 position = p.getPosition();
+		int chunkSize = (count + NUM_THREADS - 1) / NUM_THREADS;
+		List<Runnable> tasks = new ArrayList<>();
 
-			if (DO_COLLISION) {
-				ArrayList<Particle> neighbors = tree.query(new Bounds(position.x - p.scale, position.y - p.scale, p.scale * 2, p.scale * 2));
+		for (int i = 0; i < NUM_THREADS; i++) {
+			int start = i * chunkSize;
+			int end = Math.min((i + 1) * chunkSize, count);
 
-				for (Particle other : neighbors) {
-					p.collide(other);
+			tasks.add(() -> {
+				for (int j = start; j < end; j++) {
+					Particle p = particles[j];
+					Vector2 position = p.getPosition();
+
+					if (DO_COLLISION) {
+						Bounds collidable = new Bounds(position.x - p.scale, position.y - p.scale, p.scale * 2, p.scale * 2);
+						ArrayList<Particle> neighbors = tree.query(collidable);
+
+						for (Particle other : neighbors) {
+							p.collide(other);
+						}
+					}
+
+					p.update();
+					p.addVelocity(GRAVITY);
+					p.boundsCheck(defaultBounds);
 				}
-			}
+			});
+		}
 
-			p.update();
-			p.addVelocity(GRAVITY);
-			p.boundsCheck(defaultBounds);
+		try {
+			for (Runnable task : tasks) {
+				executor.submit(task);
+			}
+			executor.shutdown();
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			executor = Executors.newFixedThreadPool(NUM_THREADS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -205,10 +256,10 @@ public class Particles extends JFrame implements KeyListener {
 			Vector2 position = new Vector2(basePosition.x, basePosition.y);
 			Vector2 velocity = new Vector2(0.0f, 0.0f);
 
-			float angle = (float)Math.random() * (float)Math.PI * 2.0f;
-			float d = (float)Math.random() * 30.0f;
-			float x = (float)Math.cos(angle) * d;
-			float y = (float)Math.sin(angle) * d;
+			float angle = (float) Math.random() * (float) Math.PI * 2.0f;
+			float d = (float) Math.random() * 30.0f;
+			float x = (float) Math.cos(angle) * d;
+			float y = (float) Math.sin(angle) * d;
 			position.x += x;
 			position.y += y;
 
